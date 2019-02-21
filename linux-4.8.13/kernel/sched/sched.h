@@ -1267,7 +1267,11 @@ static inline void put_prev_task(struct rq *rq, struct task_struct *prev)
 extern const struct sched_class stop_sched_class;
 extern const struct sched_class dl_sched_class;
 extern const struct sched_class rt_sched_class;
+#ifdef CONFIG_SCHED_TEST
+extern const struct sched_class test_sched_class;
+#endif
 extern const struct sched_class fair_sched_class;
+
 extern const struct sched_class idle_sched_class;
 
 
@@ -1312,6 +1316,9 @@ extern void update_max_interval(void);
 extern void init_sched_dl_class(void);
 extern void init_sched_rt_class(void);
 extern void init_sched_fair_class(void);
+#ifdef CONFIG_SCHED_TEST
+extern void init_sched_test_class(void);
+#endif
 
 extern void resched_curr(struct rq *rq);
 extern void resched_cpu(int cpu);

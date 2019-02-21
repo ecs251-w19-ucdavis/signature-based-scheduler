@@ -28,6 +28,12 @@ config BUILDTIME_EXTABLE_SORT
 
 menu "General setup"
 
+config SCHED_TEST
+	bool
+	default y
+	help
+	  A new Scheduler to test the working of exisiting system.
+
 config BROKEN
 	bool
 

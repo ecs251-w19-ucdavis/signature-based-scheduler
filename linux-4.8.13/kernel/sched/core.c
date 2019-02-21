@@ -7556,6 +7556,9 @@ void __init sched_init(void)
 	idle_thread_set_boot_cpu();
 	set_cpu_rq_start_time(smp_processor_id());
 #endif
+#ifdef CONFIG_SCHED_TEST
+	init_sched_test_class();
+#endif
 	init_sched_fair_class();
 
 	init_schedstats();
