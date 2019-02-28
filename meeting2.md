@@ -9,7 +9,14 @@ Completely Fair Scheduler: It is observed that the two threads acquire CPU inter
 Custom FIFO Scheduler: It is observed that the threads follow FIFO during execution.
 
 
-2. We completed test profiling some applications to make the project transition to phase 2 smoothly and below are results we obtained.
-
+2. We completed test profiling some applications to make the project transition to phase 2 smoothly and here are some results   for some benchmarks:
+   [Link](https://github.com/ecs251-w19-ucdavis/signature-based-scheduler/tree/master/Results/spec-benchmarks)
+   
+    The benchmarks show diverse behavior e.g. xalancbmk has half the amount of instruction-level parallelism compared to bzip
+     so smart scheduling would help to exploit this information in heterogeneous systems. Further analysis is underway.
 
 ### What are we doing next Week?
+  - Set up more heterogeneous configurations in the simulator (especially memory side) to do smart sheduling of applications       across workloads.
+  - Modify scheduler to schedule workloads using application information that we have obtained from profiling.
+  - Try to come up with a general methodology.
+  
