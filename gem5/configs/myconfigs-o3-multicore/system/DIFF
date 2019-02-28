@@ -1,0 +1,202 @@
+# -*- coding: utf-8 -*-						# -*- coding: utf-8 -*-
+# Copyright (c) 2016 Jason Lowe-Power				# Copyright (c) 2016 Jason Lowe-Power
+# All rights reserved.						# All rights reserved.
+#								#
+# Redistribution and use in source and binary forms, with or 	# Redistribution and use in source and binary forms, with or 
+# modification, are permitted provided that the following con	# modification, are permitted provided that the following con
+# met: redistributions of source code must retain the above c	# met: redistributions of source code must retain the above c
+# notice, this list of conditions and the following disclaime	# notice, this list of conditions and the following disclaime
+# redistributions in binary form must reproduce the above cop	# redistributions in binary form must reproduce the above cop
+# notice, this list of conditions and the following disclaime	# notice, this list of conditions and the following disclaime
+# documentation and/or other materials provided with the dist	# documentation and/or other materials provided with the dist
+# neither the name of the copyright holders nor the names of 	# neither the name of the copyright holders nor the names of 
+# contributors may be used to endorse or promote products der	# contributors may be used to endorse or promote products der
+# this software without specific prior written permission.	# this software without specific prior written permission.
+#								#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONT	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONT
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, B	# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, B
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND F	# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND F
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 	# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, I	# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, I
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BU	# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BU
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LO	# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LO
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 	# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,	# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 	# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUC	# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUC
+#								#
+# Authors: Jason Lowe-Power					# Authors: Jason Lowe-Power
+
+""" Caches with options for a simple gem5 configuration scrip	""" Caches with options for a simple gem5 configuration scrip
+
+This file contains L1 I/D and L2 caches to be used in the sim	This file contains L1 I/D and L2 caches to be used in the sim
+gem5 configuration script. It uses the SimpleOpts wrapper to 	gem5 configuration script. It uses the SimpleOpts wrapper to 
+line options from each individual class.			line options from each individual class.
+"""								"""
+
+import m5							import m5
+from m5.objects import Cache, L2XBar, StridePrefetcher, SubSy	from m5.objects import Cache, L2XBar, StridePrefetcher, SubSy
+from m5.params import AddrRange, AllMemory, MemorySize		from m5.params import AddrRange, AllMemory, MemorySize
+from m5.util.convert import toMemorySize			from m5.util.convert import toMemorySize
+
+import SimpleOpts						import SimpleOpts
+
+# Some specific options for caches				# Some specific options for caches
+# For all options see src/mem/cache/BaseCache.py		# For all options see src/mem/cache/BaseCache.py
+
+class PrefetchCache(Cache):					class PrefetchCache(Cache):
+
+    SimpleOpts.add_option("--no_prefetchers", default=False,	    SimpleOpts.add_option("--no_prefetchers", default=False,
+                          action="store_true",			                          action="store_true",
+                          help="Enable prefectchers on the ca	                          help="Enable prefectchers on the ca
+
+    def __init__(self, options):				    def __init__(self, options):
+        super(PrefetchCache, self).__init__()			        super(PrefetchCache, self).__init__()
+        if not options or options.no_prefetchers:		        if not options or options.no_prefetchers:
+            return						            return
+        self.prefetcher = StridePrefetcher()			        self.prefetcher = StridePrefetcher()
+
+class L1Cache(PrefetchCache):					class L1Cache(PrefetchCache):
+    """Simple L1 Cache with default values"""			    """Simple L1 Cache with default values"""
+
+    assoc = 8							    assoc = 8
+    tag_latency = 1						    tag_latency = 1
+    data_latency = 1						    data_latency = 1
+    response_latency = 1					    response_latency = 1
+    mshrs = 16							    mshrs = 16
+    tgts_per_mshr = 20						    tgts_per_mshr = 20
+    writeback_clean = True					    writeback_clean = True
+
+    def __init__(self, options=None):				    def __init__(self, options=None):
+        super(L1Cache, self).__init__(options)			        super(L1Cache, self).__init__(options)
+        pass							        pass
+
+    def connectBus(self, bus):					    def connectBus(self, bus):
+        """Connect this cache to a memory-side bus"""		        """Connect this cache to a memory-side bus"""
+        self.mem_side = bus.slave				        self.mem_side = bus.slave
+
+    def connectCPU(self, cpu):					    def connectCPU(self, cpu):
+        """Connect this cache's port to a CPU-side port		        """Connect this cache's port to a CPU-side port
+           This must be defined in a subclass"""		           This must be defined in a subclass"""
+        raise NotImplementedError				        raise NotImplementedError
+
+class L1ICache(L1Cache):					class L1ICache(L1Cache):
+    """Simple L1 instruction cache with default values"""	    """Simple L1 instruction cache with default values"""
+
+    # Set the default size					    # Set the default size
+    size = '32kB'						    size = '32kB'
+
+    SimpleOpts.add_option('--l1i_size',				    SimpleOpts.add_option('--l1i_size',
+                        help="L1 instruction cache size. Defa	                        help="L1 instruction cache size. Defa
+
+    def __init__(self, opts=None):				    def __init__(self, opts=None):
+        super(L1ICache, self).__init__(opts)			        super(L1ICache, self).__init__(opts)
+        if not opts or not opts.l1i_size:			        if not opts or not opts.l1i_size:
+            return						            return
+        self.size = opts.l1i_size				        self.size = opts.l1i_size
+
+    def connectCPU(self, cpu):					    def connectCPU(self, cpu):
+        """Connect this cache's port to a CPU icache port"""	        """Connect this cache's port to a CPU icache port"""
+        self.cpu_side = cpu.icache_port				        self.cpu_side = cpu.icache_port
+
+class L1DCache(L1Cache):					class L1DCache(L1Cache):
+    """Simple L1 data cache with default values"""		    """Simple L1 data cache with default values"""
+
+    # Set the default size					    # Set the default size
+    size = '32kB'						    size = '32kB'
+
+    SimpleOpts.add_option('--l1d_size',				    SimpleOpts.add_option('--l1d_size',
+                          help="L1 data cache size. Default: 	                          help="L1 data cache size. Default: 
+
+    def __init__(self, opts=None):				    def __init__(self, opts=None):
+        super(L1DCache, self).__init__(opts)			        super(L1DCache, self).__init__(opts)
+        if not opts or not opts.l1d_size:			        if not opts or not opts.l1d_size:
+            return						            return
+        self.size = opts.l1d_size				        self.size = opts.l1d_size
+
+    def connectCPU(self, cpu):					    def connectCPU(self, cpu):
+        """Connect this cache's port to a CPU dcache port"""	        """Connect this cache's port to a CPU dcache port"""
+        self.cpu_side = cpu.dcache_port				        self.cpu_side = cpu.dcache_port
+
+class MMUCache(Cache):						class MMUCache(Cache):
+    # Default parameters					    # Default parameters
+    size = '8kB'						    size = '8kB'
+    assoc = 4							    assoc = 4
+    tag_latency = 1						    tag_latency = 1
+    data_latency = 1						    data_latency = 1
+    response_latency = 1					    response_latency = 1
+    mshrs = 20							    mshrs = 20
+    tgts_per_mshr = 12						    tgts_per_mshr = 12
+    writeback_clean = True					    writeback_clean = True
+
+    def __init__(self):						    def __init__(self):
+        super(MMUCache, self).__init__()			        super(MMUCache, self).__init__()
+
+    def connectCPU(self, cpu):					    def connectCPU(self, cpu):
+        """Connect the CPU itb and dtb to the cache		        """Connect the CPU itb and dtb to the cache
+           Note: This creates a new crossbar			           Note: This creates a new crossbar
+        """							        """
+        self.mmubus = L2XBar()					        self.mmubus = L2XBar()
+        self.cpu_side = self.mmubus.master			        self.cpu_side = self.mmubus.master
+        for tlb in [cpu.itb, cpu.dtb]:				        for tlb in [cpu.itb, cpu.dtb]:
+            self.mmubus.slave = tlb.walker.port			            self.mmubus.slave = tlb.walker.port
+
+    def connectBus(self, bus):					    def connectBus(self, bus):
+        """Connect this cache to a memory-side bus"""		        """Connect this cache to a memory-side bus"""
+        self.mem_side = bus.slave				        self.mem_side = bus.slave
+
+class L2Cache(PrefetchCache):					class L2Cache(PrefetchCache):
+    """Simple L2 Cache with default values"""			    """Simple L2 Cache with default values"""
+
+    # Default parameters					    # Default parameters
+    size = '256kB'						    size = '256kB'
+    assoc = 16							    assoc = 16
+    tag_latency = 10						    tag_latency = 10
+    data_latency = 10						    data_latency = 10
+    response_latency = 1					    response_latency = 1
+    mshrs = 20							    mshrs = 20
+    tgts_per_mshr = 12						    tgts_per_mshr = 12
+    writeback_clean = True					    writeback_clean = True
+
+    SimpleOpts.add_option('--l2_size',				    SimpleOpts.add_option('--l2_size',
+                          help="L2 cache size. Default: %s" %	                          help="L2 cache size. Default: %s" %
+
+    def __init__(self, opts=None):				    def __init__(self, opts=None):
+        super(L2Cache, self).__init__(opts)			        super(L2Cache, self).__init__(opts)
+        if not opts or not opts.l2_size:			        if not opts or not opts.l2_size:
+            return						            return
+        self.size = opts.l2_size				        self.size = opts.l2_size
+
+    def connectCPUSideBus(self, bus):				    def connectCPUSideBus(self, bus):
+        self.cpu_side = bus.master				        self.cpu_side = bus.master
+
+    def connectMemSideBus(self, bus):				    def connectMemSideBus(self, bus):
+        self.mem_side = bus.slave				        self.mem_side = bus.slave
+
+class L3Cache(Cache):						class L3Cache(Cache):
+    """Simple L3 Cache bank with default values			    """Simple L3 Cache bank with default values
+       This assumes that the L3 is made up of multiple banks.	       This assumes that the L3 is made up of multiple banks.
+       be used as a standalone L3 cache.			       be used as a standalone L3 cache.
+    """								    """
+
+    SimpleOpts.add_option('--l3_size', default = '4MB',		    SimpleOpts.add_option('--l3_size', default = '4MB',
+                          help="L3 cache size. Default: 4MB")	                          help="L3 cache size. Default: 4MB")
+
+    # Default parameters					    # Default parameters
+    assoc = 32							    assoc = 32
+    tag_latency = 40						    tag_latency = 40
+    data_latency = 40						    data_latency = 40
+    response_latency = 10					    response_latency = 10
+    mshrs = 256							    mshrs = 256
+    tgts_per_mshr = 12						    tgts_per_mshr = 12
+    clusivity = 'mostly_excl'					    clusivity = 'mostly_excl'
+
+    def __init__(self, opts):					    def __init__(self, opts):
+        super(L3Cache, self).__init__()				        super(L3Cache, self).__init__()
+        self.size = (opts.l3_size)				        self.size = (opts.l3_size)
+
+    def connectCPUSideBus(self, bus):				    def connectCPUSideBus(self, bus):
+        self.cpu_side = bus.master				        self.cpu_side = bus.master
+
+    def connectMemSideBus(self, bus):				    def connectMemSideBus(self, bus):
+        self.mem_side = bus.slave				        self.mem_side = bus.slave
