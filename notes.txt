@@ -1,0 +1,21 @@
+1.	default scheduling algorithm is complete fair scheduling (CFS). —> fair.c
+2.	In fair.c,
+struct sched_class fair_sched_class = {
+1.	/*
+2.	 * All the scheduling class methods:
+3.	 */
+}
+
+To Implementing new scheduler policy,
+1.	Implement all the scheduling class methods
+2.	Find where it is getting initialized,
+In,  kernel/sched/core.c:sched_init()
+Which is called from  
+init/main.c:kernel_init_freeable():
+Making changes to these files.
+
+
+
+
+
+
