@@ -2657,10 +2657,10 @@ static void switched_to_test(struct rq *rq, struct task_struct *p)
 	switched_to_rt(rq, p);
 }
 
-static void update_curr_test(struct rq *rq)
+/*static void update_curr_test(struct rq *rq)
 {
 	update_curr_rt(rq);
-}
+}*/
 
 const struct sched_class test_sched_class = {
 	.next			= &fair_sched_class,
