@@ -2643,7 +2643,7 @@ static void task_tick_test(struct rq *rq, struct task_struct *p, int queued)
 
 static unsigned int get_rr_interval_test(struct rq *rq, struct task_struct *task)
 {
-	get_rr_interval_rt(rq, task);
+	return get_rr_interval_rt(rq, task);
 }
 
 static void
