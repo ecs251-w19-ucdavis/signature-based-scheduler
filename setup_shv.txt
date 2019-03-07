@@ -1,0 +1,20 @@
+-------Install qemu to test the kernel
+wget https://download.qemu.org/qemu-3.1.0.tar.xz
+tar xvJf qemu-3.1.0.tar.xz
+cd qemu-3.1.0
+./configure
+make
+------
+Alternatively it could be installed by
+apt-get install qemu
+------
+-----
+Build kernel Image
+https://www.linux.com/learn/intro-to-linux/2018/4/how-compile-linux-kernel-0
+https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
+Kernal + qemu
+https://nostillsearching.wordpress.com/2012/09/22/compiling-linux-kernel-and-running-it-using-qemu/
+http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/
+eg:
+qemu-system-x86_64 -kernel linux-4.17-rc2/arch/x86_64/boot/bzImage -curses -append "console=ttyS0" -initrd /boot/initrd.img-4.17-rc2 -m 512M
+**Note to exit from graphic ESC+2 and Ctrl+q.
