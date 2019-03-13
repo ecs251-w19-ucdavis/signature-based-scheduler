@@ -2565,7 +2565,7 @@ static void
 enqueue_task_test(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct sched_rt_entity *rt_se = &p->rt;
-
+	printk(KERN_INFO "GT: enqueue happening");
 	if (flags & ENQUEUE_WAKEUP)
 		rt_se->timeout = 0;
 
@@ -2697,8 +2697,8 @@ const struct sched_class test_sched_class = {
 
 void __init init_sched_test_class(void)
 {
+	printk(KERN_INFO "GT: Init success");
 	unsigned int i;
-
 	for_each_possible_cpu(i) {
 		zalloc_cpumask_var_node(&per_cpu(local_cpu_mask, i),
 					GFP_KERNEL, cpu_to_node(i));
