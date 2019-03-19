@@ -1871,6 +1871,11 @@ source "arch/Kconfig"
 
 endmenu		# General setup
 
+config TEST_SCHED
+  bool "A test scheduler"
+  default y    
+
+
 config HAVE_GENERIC_DMA_COHERENT
 	bool
 	default n

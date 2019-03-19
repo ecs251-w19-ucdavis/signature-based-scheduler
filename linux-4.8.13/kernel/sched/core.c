@@ -3420,7 +3420,7 @@ static inline void sched_submit_work(struct task_struct *tsk)
 asmlinkage __visible void __sched schedule(void)
 {
 	struct task_struct *tsk = current;
-
+	//printk(KERN_DEBUG "GT: Schedule is called");
 	sched_submit_work(tsk);
 	do {
 		preempt_disable();
@@ -3907,7 +3907,7 @@ static void __setscheduler_params(struct task_struct *p,
 		const struct sched_attr *attr)
 {
 	int policy = attr->sched_policy;
-
+	printk(KERN_DEBUG "GT: Policy %d", policy);
 	if (policy == SETPARAM_POLICY)
 		policy = p->policy;
 
@@ -3942,7 +3942,8 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 		p->prio = rt_mutex_get_effective_prio(p, normal_prio(p));
 	else
 		p->prio = normal_prio(p);
-
+	printk(KERN_INFO "GT: Test started\n");
+	printk("%d", rt_prio(p->prio));
 	if (dl_prio(p->prio))
 		p->sched_class = &dl_sched_class;
 	else if (rt_prio(p->prio))
@@ -4058,13 +4059,16 @@ recheck:
 	} else {
 		reset_on_fork = !!(attr->sched_flags & SCHED_FLAG_RESET_ON_FORK);
 
-		if (!valid_policy(policy))
+		if (!valid_policy(policy) && policy != 4)
 			return -EINVAL;
 	}
 
-	if (attr->sched_flags & ~(SCHED_FLAG_RESET_ON_FORK))
+	if ((attr->sched_flags & ~(SCHED_FLAG_RESET_ON_FORK))&&policy!=4)
 		return -EINVAL;
 
+	if(policy==4){
+		printk("GT: flags = %d", attr->sched_flags);
+	}
 	/*
 	 * Valid priorities for SCHED_FIFO and SCHED_RR are
 	 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_NORMAL,
@@ -4243,6 +4247,9 @@ change:
 	prev_class = p->sched_class;
 	__setscheduler(rq, p, attr, pi);
 
+	if (p->sched_class == &fair_sched_class && attr->sched_policy == 4) {
+		printk("GT: It is a fair sched");
+	}
 	if (running)
 		p->sched_class->set_curr_task(rq);
 	if (queued) {
@@ -7456,6 +7463,7 @@ void __init sched_init(void)
 		rq->calc_load_active = 0;
 		rq->calc_load_update = jiffies + LOAD_FREQ;
 		init_cfs_rq(&rq->cfs);
+		init_test_rq(&rq->rt);
 		init_rt_rq(&rq->rt);
 		init_dl_rq(&rq->dl);
 #ifdef CONFIG_FAIR_GROUP_SCHED
