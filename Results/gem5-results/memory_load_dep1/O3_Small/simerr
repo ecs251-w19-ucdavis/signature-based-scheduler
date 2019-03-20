@@ -1,0 +1,7 @@
+0: system.remote_gdb: listening for remote gdb on port 7003
+warn: CoherentXBar system.interrupt_xbar has no snooping ports attached!
+info: Entering event queue @ 0.  Starting simulation...
+warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
+      Returning '/home/aakahlow/Darcher/GEM5_EXPERIMENTS_STUFF/base-experiments/benchmarks/micro/memory_load_dep1/memory_load_dep1'
+info: Increasing stack size by one page.
+warn: ignoring syscall access(...)

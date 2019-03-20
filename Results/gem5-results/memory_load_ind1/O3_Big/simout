@@ -1,0 +1,10 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Mar 13 2019 21:26:43
+gem5 started Mar 13 2019 21:28:04
+gem5 executing on summit, pid 26852
+command line: build/X86/gem5.opt -re --outdir=../results/gem5/micro/memory_load_ind1/O3_Big ../configs/run.py O3_Big Inf ../benchmarks/micro/memory_load_ind1/memory_load_ind1 '10000 256'
+
+Global frequency set at 1000000000000 ticks per second
+1.304789 ms
