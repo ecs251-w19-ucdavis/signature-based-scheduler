@@ -4654,7 +4654,11 @@ out_unlock:
 }
 
 long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
-{
+{	
+	printk(KERN_INFO "please: in_mask - 1: %lx",in_mask->bits[0]); //AYAZ
+	//in_mask->bits[0] = 0x00000001;
+	printk(KERN_INFO "please: in_mask - 2: %lx",in_mask->bits[0]); //AYAZ
+
 	cpumask_var_t cpus_allowed, new_mask;
 	struct task_struct *p;
 	int retval;
@@ -4701,7 +4705,7 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 	cpuset_cpus_allowed(p, cpus_allowed);
 	cpumask_and(new_mask, in_mask, cpus_allowed);
 
-	/*
+	/*printk(KERN_INFO "please: in_mask: %lx",in_mask->bits[0]); //AYAZ
 	 * Since bandwidth control happens on root_domain basis,
 	 * if admission test is enabled, we only admit -deadline
 	 * tasks allowed to run on all the CPUs in the task's
@@ -4733,14 +4737,25 @@ again:
 			goto again;
 		}
 	}
+
+	//p->cpus_allowed = (cpumask_t)0xf; //AYAZ
+
+    	//AYAZ:
+	printk(KERN_INFO "pid, allowed, n_mask : %d, %lx, %lx \n", p->pid, p->cpus_allowed, new_mask);
+	//AYAZ
+
+
 out_free_new_mask:
 	free_cpumask_var(new_mask);
 out_free_cpus_allowed:
 	free_cpumask_var(cpus_allowed);
 out_put_task:
 	put_task_struct(p);
+
+
 	return retval;
 }
+
 
 static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 			     struct cpumask *new_mask)
@@ -4753,14 +4768,6 @@ static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 	return copy_from_user(new_mask, user_mask_ptr, len) ? -EFAULT : 0;
 }
 
-/**
- * sys_sched_setaffinity - set the cpu affinity of a process
- * @pid: pid of the process
- * @len: length in bytes of the bitmask pointed to by user_mask_ptr
- * @user_mask_ptr: user-space pointer to the new cpu mask
- *
- * Return: 0 on success. An error code otherwise.
- */
 SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 		unsigned long __user *, user_mask_ptr)
 {
@@ -4769,8 +4776,36 @@ SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 
 	if (!alloc_cpumask_var(&new_mask, GFP_KERNEL))
 		return -ENOMEM;
+    
+	printk(KERN_INFO "user_mask 1: %lx",*user_mask_ptr); 
+	
+	unsigned long __user read_signature = *user_mask_ptr;
 
+
+//AYAZ
+	struct task_struct *p;
+	p = find_process_by_pid(pid);
+	&p->process_signature = read_signature;
+	
+//AYAZ
+
+
+	if(read_signature == 0x10000000)
+	{	*user_mask_ptr = 0x00000001; 
+		printk(KERN_INFO "if true");	
+	}
+
+	else if(read_signature == 0x20000000)
+	{	printk(KERN_INFO "else true");
+		*user_mask_ptr = 0x00000002;	
+	}
+
+	printk(KERN_INFO "user_mask 2: %lx",*user_mask_ptr); 
+	
 	retval = get_user_cpu_mask(user_mask_ptr, len, new_mask);
+	printk(KERN_INFO "sched_affinity: %lx",&new_mask); //AYAZ
+	printk(KERN_INFO "size: %d",sizeof(new_mask->bits)/sizeof(new_mask->bits[0]));
+
 	if (retval == 0)
 		retval = sched_setaffinity(pid, new_mask);
 	free_cpumask_var(new_mask);
